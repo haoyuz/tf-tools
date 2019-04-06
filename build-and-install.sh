@@ -20,7 +20,7 @@ build_pip_package() {
 
   yes "" | "$PYTHON_BIN_PATH" configure.py
 
-  bazel build --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
+  bazel build -c opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
   ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
 }
 
