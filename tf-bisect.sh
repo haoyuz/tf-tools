@@ -1,52 +1,60 @@
-#!/usr/bin/env bash
-
-. build-and-install.sh
+#!/bin/bash
 
 PYTHON=python3
-BISECT_LOG="${HOME}/bisect_log.txt"
-TEST_OUTPUT="/tmp/test_output.log"
+TF_HOME="${HOME}/tensorflow"
+TF_TOOLS_HOME="${HOME}/tf-tools"
+TEST_OUTPUT="/tmp/bisect_output"
+LOG_PREFIX="[TF_BISECT]"
+
+. ${TF_TOOLS_HOME}/build-and-install.sh
 
 test_command() {
-  cd $HOME/repos/models
+  test_log=$1
 
+  cd $HOME/repos/models
   ${PYTHON} -c "import tensorflow as tf; print('TF version:', tf.__version__); print('TF Git version:', tf.__git_version__)"
 
-  TF_GPU_THREAD_MODE='gpu_private' PYTHONPATH=. \
+  PYTHONPATH=. \
   ${PYTHON} official/resnet/keras/keras_imagenet_main.py \
     --skip_eval --dtype=fp16 --enable_eager --enable_xla \
     --num_gpus=8 --batch_size=2048 \
-    --train_steps=210 --alsologtostderr --synth &> ${TEST_OUTPUT}
+    --train_steps=201 --alsologtostderr --synth &> ${test_log}
 }
 
 parse_output() {
+  test_log=$1
+
   # {'num_batches':200, 'time_taken': 22.305864,'images_per_second': 9181.442114}
-  cat "${TEST_OUTPUT}"
-  line=$(cat "${TEST_OUTPUT}" | grep "num_batches':200,")
+  line=$(cat "${test_log}" | grep "num_batches':200,")
   last_word=${line##* }  # after substitution: 9181.442114}
   int_in_last_word=${last_word%.*}  # after substitution: 9181
 
   # if the measured performance is less than 9000, exit with error
-  if [[ "${int_in_last_word}" -lt "9000" ]]; then
-    echo "[BISECT] bad performance: ${int_in_last_word}"
+  if [[ "${int_in_last_word}" -lt "9350" ]]; then
+    echo "${LOG_PREFIX} bad performance: ${int_in_last_word}"
     exit 1
   fi
-  echo "[BISECT] good performance: ${int_in_last_word}"
+  echo "${LOG_PREFIX} good performance: ${int_in_last_word}"
 }
 
 bisect_run() {
-  echo "[BISECT] Build and install TensorFlow from source"
-  cd ${HOME}/tensorflow
-  build_pip_package
-  install_tf_pip_package
-  cd
+  echo "|||||||||||||||||||||||||||||||||"
+  date
+  cd ${TF_HOME}
+  git_commit=$(git log --pretty=format:'%h' -n 1)
+  echo "${LOG_PREFIX} ${git_commit} Build TensorFlow from source"
 
-  echo "[BISECT] Run tests"
-  test_command
+  mkdir -p ${TEST_OUTPUT}
+  build_log="${TEST_OUTPUT}/${git_commit}_build.log"
+  test_log="${TEST_OUTPUT}/${git_commit}_test.log"
 
-  echo "[BISECT] Parse test output"
-  parse_output
+  build_pip_package &> ${build_log}
+  echo "${LOG_PREFIX} ${git_commit} Install TensorFlow from source"
+  install_tf_pip_package 2>&1 >> ${build_log}
+  echo "${LOG_PREFIX} ${git_commit} Run tests"
+  test_command ${test_log}
+  echo "${LOG_PREFIX} ${git_commit} Parse test output"
+  parse_output ${test_log}
 }
 
-echo "|||||||||||||||||||||||||||||||||" >> ${BISECT_LOG}
-date >> ${BISECT_LOG}
-bisect_run >> ${BISECT_LOG} 2>&1
+bisect_run
