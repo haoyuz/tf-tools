@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PYTHON=python3
+PYTHON="python3"
 TF_HOME="${HOME}/tensorflow"
 TF_TOOLS_HOME="${HOME}/tf-tools"
 TEST_OUTPUT="/tmp/bisect_output"
@@ -51,6 +51,7 @@ bisect_run() {
   build_pip_package &> ${build_log}
   echo "${LOG_PREFIX} ${git_commit} Install TensorFlow from source"
   install_tf_pip_package 2>&1 >> ${build_log}
+  save_tf_pip_package
   echo "${LOG_PREFIX} ${git_commit} Run tests"
   test_command ${test_log}
   echo "${LOG_PREFIX} ${git_commit} Parse test output"
