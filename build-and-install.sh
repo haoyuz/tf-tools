@@ -29,6 +29,14 @@ build_pip_package() {
   ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
 }
 
+build_v2_pip_package() {
+  rm -f ${PIP_PATH}/*
+  cd ${TF_HOME}
+
+  bazel build -c opt --config=cuda --config=v2 //tensorflow/tools/pip_package:build_pip_package
+  ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
+}
+
 install_tf_pip_package() {
   ${PYTHON} -m pip uninstall -y tensorflow
   ${PYTHON} -m pip install --force-reinstall ${PIP_PATH}/tensorflow-*.whl --user
