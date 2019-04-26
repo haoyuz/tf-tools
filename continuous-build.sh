@@ -52,9 +52,9 @@ TF_HOME=${TF_V1_HOME} build_pip_package
 log "Upload to ${gcs_path}"
 gsutil cp ${PIP_PATH}/v1/tensorflow-*.whl ${gcs_path}/
 
-log "Build TensorFlow v2 pip package..."
-TF_HOME=${TF_V2_HOME} build_v2_pip_package
-log "Upload to ${gcs_path}"
-gsutil cp ${PIP_PATH}/v2/tensorflow-*.whl ${gcs_path}/
+# log "Build TensorFlow v2 pip package..."
+# TF_HOME=${TF_V2_HOME} build_v2_pip_package
+# log "Upload to ${gcs_path}"
+# gsutil cp ${PIP_PATH}/v2/tensorflow-*.whl ${gcs_path}/
 
 log "-------------------- Finishing Continuous Build --------------------"
