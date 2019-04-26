@@ -20,7 +20,7 @@ if $(pgrep -f continuous-build.sh > /dev/null); then
   exit 1
 fi
 
-source ${PYTHON36_VENV}/bin/activate
+source ${HOME}/${PYTHON36_VENV}/bin/activate
 
 bash ${TF_TOOLS_HOME}/continuous-build.sh &> ${tmp_log_file}
 gsutil cp ${tmp_log_file} ${gs_log_file}
