@@ -7,7 +7,7 @@
 TF_TOOLS_HOME="${HOME}/tf-tools"
 TF_V1_HOME="${HOME}/tensorflow_v1_build"
 TF_V2_HOME="${HOME}/tensorflow_v2_build"
-GCS_BUCKET="gs://haoyuzhang-tf-gpu-pip"
+GCS_BUCKET="gs://tf-performance/tf_binary/hourly"
 PIP_PATH="/tmp/tensorflow_pkg"
 
 log () {
@@ -35,7 +35,7 @@ cd ${TF_V1_HOME} && git pull
 # Use <CL>-<CommitHash> as the directory name on GCS to save the package
 git_hash=$(git rev-parse HEAD)
 piper_cl=$(git log -1 | grep PiperOrigin-RevId | rev | cut -d " " -f1 | rev)
-gcs_path="${GCS_BUCKET}/tensorflow_pkg/${piper_cl}-${git_hash}"
+gcs_path="${GCS_BUCKET}/${piper_cl}-${git_hash}"
 
 cd ${TF_V2_HOME}
 git checkout master
@@ -51,10 +51,12 @@ log "Build TensorFlow v1 pip package..."
 TF_HOME=${TF_V1_HOME} build_pip_package
 log "Upload to ${gcs_path}"
 gsutil cp ${PIP_PATH}/tensorflow-*.whl ${gcs_path}/v1/
+gsutil cp ${PIP_PATH}/tensorflow-*.whl ${GCS_BUCKET}/latest/v1/
 
 # log "Build TensorFlow v2 pip package..."
 # TF_HOME=${TF_V2_HOME} build_v2_pip_package
 # log "Upload to ${gcs_path}"
 # gsutil cp ${PIP_PATH}/tensorflow-*.whl ${gcs_path}/v2/
+# gsutil cp ${PIP_PATH}/tensorflow-*.whl ${GCS_BUCKET}/latest/v2/
 
 log "-------------------- Finishing Continuous Build --------------------"
