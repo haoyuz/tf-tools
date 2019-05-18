@@ -39,7 +39,7 @@ build_v2_pip_package() {
 
 install_tf_pip_package() {
   ${PYTHON} -m pip uninstall -y tensorflow
-  ${PYTHON} -m pip install --force-reinstall ${PIP_PATH}/tensorflow-*.whl --user
+  ${PYTHON} -m pip install --force-reinstall ${PIP_PATH}/tensorflow-*.whl
 }
 
 # Save should happen only after install (to get git version tag)

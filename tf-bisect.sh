@@ -11,7 +11,7 @@ LOG_PREFIX="[TF_BISECT]"
 test_command() {
   test_log=$1
 
-  cd $HOME/repos/models
+  cd $HOME/models
   ${PYTHON} -c "import tensorflow as tf; print('TF version:', tf.__version__); print('TF Git version:', tf.__git_version__)"
 
   PYTHONPATH=. \
