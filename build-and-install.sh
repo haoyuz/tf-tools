@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Build TensorFlow pip package from source and install.
-# Prerequisite: Python, bazel 0.22
+# Prerequisite: Python, bazel 0.24.1
 
 PYTHON="python3"
 TF_HOME="${HOME}/tensorflow"

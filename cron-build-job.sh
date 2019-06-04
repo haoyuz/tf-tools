@@ -3,6 +3,7 @@
 TF_TOOLS_HOME="${HOME}/tf-tools"
 # Python 3.6 virtual env should have already be prepared with TF dependencies
 # (to prepare, maybe just install tf-nightly-gpu, and then uninstall TF)
+#   add-apt-repository ppa:deadsnakes/ppa
 #   apt-get install -y python3.6 python3.6-dev python3.6-venv
 #   virtualenv -p python3.6 py36venv
 PYTHON36_VENV="py36venv"
