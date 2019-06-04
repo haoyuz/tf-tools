@@ -21,7 +21,7 @@ configure() {
   yes "" | "${PYTHON_BIN_PATH}" configure.py
 }
 
-build_pip_package() {
+build_v1_pip_package() {
   rm -f ${PIP_PATH}/*
   cd ${TF_HOME}
 
