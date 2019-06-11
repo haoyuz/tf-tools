@@ -30,7 +30,7 @@ source ${TF_TOOLS_HOME}/build-and-install.sh
 
 ensure_tf_code ${TF_HOME}
 
-cd ${TF_HOME} && git pull
+cd ${TF_HOME} && git checkout . && git pull
 
 # TODO: check out last commit before current hour in time, to make sure the v1
 # and v2 builds are synced at the same commit
