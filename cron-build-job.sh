@@ -15,7 +15,7 @@ git pull
 
 date_time=$(date '+%Y%m%d-%H%M%S')
 tmp_log_file="/tmp/continuous-build.log"
-gs_log_file="${GCS_LOG_PATH}/build-${date_time}.txt"
+gs_log_file="${GCS_LOG_PATH}/build-${date_time}"
 
 if $(pgrep -f continuous-build.sh > /dev/null); then
   echo "Last cron job is still running." > /tmp/dummy.log
