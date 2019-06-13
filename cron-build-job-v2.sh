@@ -15,15 +15,18 @@ git pull
 
 date_time=$(date '+%Y%m%d-%H%M%S')
 tmp_log_file="/tmp/continuous-build.log"
-gs_log_file="${GCS_LOG_PATH}/build-v2-${date_time}.txt"
+gs_log_file="${GCS_LOG_PATH}/build-v2-${date_time}"
 
 if $(pgrep -f continuous-build.sh > /dev/null); then
   echo "Last cron job is still running." > /tmp/dummy.log
-  gsutil cp /tmp/dummy.log ${gs_log_file}
+  gsutil cp /tmp/dummy.log "${gs_log_file}-blocked.log"
   exit 1
 fi
 
 source ${HOME}/${PYTHON36_VENV}/bin/activate
 
-bash ${TF_TOOLS_HOME}/continuous-build.sh 2 &> ${tmp_log_file}
-gsutil cp ${tmp_log_file} ${gs_log_file}
+if bash ${TF_TOOLS_HOME}/continuous-build.sh 2 &> ${tmp_log_file}; then
+  gsutil cp ${tmp_log_file} "${gs_log_file}.log"
+else
+  gsutil cp ${tmp_log_file} "${gs_log_file}-failed.log"
+fi

@@ -8,7 +8,7 @@
 TF_VER=${1:-1}
 
 TF_TOOLS_HOME="${HOME}/tf-tools"
-TF_HOME="${HOME}/tensorflow_v${TF_VER}_build"
+TF_HOME="${HOME}/tensorflow"
 GCS_BUCKET="gs://tf-performance/tf_binary/hourly"
 PIP_PATH="/tmp/tensorflow_pkg"
 
@@ -47,9 +47,18 @@ log "Source code at cl/${piper_cl} and commit=${git_hash}"
 [[ -z "${TF_CUDA_COMPUTE_CAPABILITIES}" ]] && configure
 
 log "Build TensorFlow v${TF_VER} pip package..."
-TF_HOME=${TF_HOME} build_v${TF_VER}_pip_package
-log "Upload to ${gcs_path}"
-gsutil cp ${PIP_PATH}/tensorflow-*.whl ${gcs_path}/v${TF_VER}/
-gsutil cp ${PIP_PATH}/tensorflow-*.whl ${GCS_BUCKET}/latest/v${TF_VER}/
+build_v${TF_VER}_pip_package
+
+ls ${PIP_PATH}/tensorflow-*.whl &> /dev/null
+pip_exist=$?
+
+if [[ ${pip_exist} == 0 ]]; then
+  log "Finished building pip package. Upload to ${gcs_path}"
+  gsutil cp ${PIP_PATH}/tensorflow-*.whl ${gcs_path}/v${TF_VER}/
+  gsutil cp ${PIP_PATH}/tensorflow-*.whl ${GCS_BUCKET}/latest/v${TF_VER}/
+else
+  log "Failed building pip package."
+fi
 
 log "-------------------- Finishing Continuous Build --------------------"
+[[ ${pip_exist} == 0 ]]  # Return 0 if pip exists

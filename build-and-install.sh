@@ -21,20 +21,22 @@ configure() {
   yes "" | "${PYTHON_BIN_PATH}" configure.py
 }
 
-build_v1_pip_package() {
+build_pip_package() {
+  build_config_v=$1  # empty string for v1, "--config=v2" for v2
+
   rm -f ${PIP_PATH}/*
   cd ${TF_HOME}
+  if bazel build -c opt --config=cuda ${build_config_v} //tensorflow/tools/pip_package:build_pip_package; then
+    ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
+  fi
+}
 
-  bazel build -c opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
-  ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
+build_v1_pip_package() {
+  build_pip_package ""
 }
 
 build_v2_pip_package() {
-  rm -f ${PIP_PATH}/*
-  cd ${TF_HOME}
-
-  bazel build -c opt --config=cuda --config=v2 //tensorflow/tools/pip_package:build_pip_package
-  ./bazel-bin/tensorflow/tools/pip_package/build_pip_package ${PIP_PATH}
+  build_pip_package "--config=v2"
 }
 
 install_tf_pip_package() {
