@@ -136,12 +136,13 @@ setup_cluster() {
 
 run_experiment() {
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
-    execute_in_docker "/root/dev/models/deploy/run_experiments.sh"
+    execute_in_docker "cd /root/dev/models/deploy; git pull; ./run_experiment.sh"
   fi
 }
 
 upload_logs() {
-  log "Upload logs to GCS"
+  GCS_URL="${GCS_LOG_PATH}/${EXPERIMENT_ID}/logs"
+  log "Upload logs to ${GCS_URL}"
   gsutil cp -r ${EXP_DIR}/logs "${GCS_LOG_PATH}/${EXPERIMENT_ID}/logs"
 }
 
