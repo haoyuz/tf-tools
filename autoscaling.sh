@@ -1,6 +1,10 @@
 #!/bin/bash
 
+TF_TOOLS_REPO="https://github.com/haoyuz/tf-tools.git"
 TF_TOOLS_HOME="${HOME}/tf-tools"
+TF_TOOLS_BRANCH="autoscaling"
+TF_DOCKER_REPO="https://bitbucket.org/andrewor14/tf-docker"
+TF_DOCKER_BRANCH="autoscaling"
 TF_DOCKER_HOME="${HOME}/tf-docker"
 EXP_DIR="${HOME}/experiments"
 GCS_LOG_PATH="gs://haoyuzhang-tf-gpu-pip/autoscaling"
@@ -9,14 +13,15 @@ EXP_CONTROL_URL="10.0.0.101:8000/"
 EXP_ID_FILE_NAME="experiment_id.txt"
 HOSTS_FILE_NAME="hosts.txt"
 CONTAINER_NAME="autoscalingtest"
+NETWORK_NAME="autoscaling-net"
 
 HOSTNAME="0.0.0.0"
-IS_MASTER=0
+MASTER_HOST="0.0.0.0"
 
 log () {
   log_message=$1
   date_time=$(date '+%Y-%m-%d %H:%M:%S')
-  echo "[${date_time} ContinuousBuild] ${log_message}"
+  echo "[${date_time} autoscaling.sh] ${log_message}"
 }
 
 ensure_code() {
@@ -32,6 +37,7 @@ ensure_code() {
 }
 
 set_timezone() {
+  log "Setting timezone to America/Los_Angeles"
   # Requires sudo
   ln -sf /usr/share/zoneinfo/America/Los_Angeles /etc/localtime
 }
@@ -42,30 +48,31 @@ control_run_or_exit() {
   rm ${EXP_ID_FILE_NAME}
   rm ${HOSTS_FILE_NAME}
 
-  # Try to get experiment ID and hosts file from a URL
+  log "Getting experiment ID and hosts file from ${EXP_CONTROL_URL}"
   wget "${EXP_CONTROL_URL}/${EXP_ID_FILE_NAME}"
   retval=$?
   if [[ $retval -ne 0 ]]; then
+    log "ERROR: Cannot get experiment ID file"
     exit 101
   fi
   wget "${EXP_CONTROL_URL}/${HOSTS_FILE_NAME}"
   retval=$?
   if [[ $retval -ne 0 ]]; then
+    log "ERROR: Cannot get hosts file"
     exit 101
   fi
 
-  # Assuming experiment ID is a timestamp showing the approximate start time.
+  # Assuming experiment ID is a timestamp for approximate start time
   export EXPERIMENT_ID=$(cat "${EXP_ID_FILE_NAME}")
+  log "Got experiment ID ${EXPERIMENT_ID}"
   date_time=$(date '+%Y%m%d%H%M%S')
   if [[ "${EXPERIMENT_ID}" -lt "${date_time}" ]]; then
+    log "ERROR: Experiment ID expired. Must be larger than current timestamp."
     exit 102
   fi
 
-  log "Get experiment ID ${EXPERIMENT_ID}"
-
-  master=$(head -1 "${HOSTS_FILE_NAME}")
-  if [[ "${master}" == "${HOSTNAME}" ]]; then
-    IS_MASTER=1
+  export MASTER_HOST=$(head -1 "${HOSTS_FILE_NAME}")
+  if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     log "I am master!"
   fi
 }
@@ -74,8 +81,8 @@ init() {
   log "Preparing environment..."
   set_timezone
   export HOSTNAME=$(hostname -i)
-  ensure_code ${TF_TOOLS_HOME} "https://github.com/haoyuz/tf-tools.git" "autoscaling"
-  ensure_code ${TF_DOCKER_HOME} "https://bitbucket.org/andrewor14/tf-docker" "autoscaling"
+  ensure_code ${TF_TOOLS_HOME} ${TF_TOOLS_REPO} ${TF_TOOLS_BRANCH}
+  ensure_code ${TF_DOCKER_HOME} ${TF_DOCKER_REPO} ${TF_DOCKER_BRANCH}
 
   mkdir -p ${EXP_DIR}
   rm -rf ${EXP_DIR}/*
@@ -83,7 +90,7 @@ init() {
 
 build_docker_image() {
   cd ${EXP_DIR}
-  log "Build docker image..."
+  log "Building docker image..."
   docker build -t autoscaling:latest -f src/autoscaling/Dockerfile .
 }
 
@@ -101,15 +108,19 @@ setup_cluster() {
   log "Setup SSH between host VMs"
   ${TF_DOCKER_HOME}/scripts/enable_ssh_access.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
 
-  if [[ "$IS_MASTER" == 1 ]]; then
+  if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     log "On master node, build an overlay network, make everyone join it"
     ${TF_DOCKER_HOME}/scripts/build_overlay_network.sh "${EXP_DIR}/${HOSTS_FILE_NAME}"
+  else
+    log "On worker node, query the overlay network before trying to join it"
+    until ssh -tt ${MASTER_HOST} "docker network ls | grep ${NETWORK_NAME}"; do
+      sleep 1
+    done
   fi
-  # other nodes should sleep and wait for signal?
 
   log "Start containers attached to the overlay network"
   mkdir -p ${EXP_DIR}/container_hosts
-  docker run --name "${CONTAINER_NAME}" -dit --network=autoscaling-net --runtime=nvidia \
+  docker run --name "${CONTAINER_NAME}" -dit --network=${NETWORK_NAME} --runtime=nvidia \
       -v ${EXP_DIR}/container_hosts:/root/container_hosts \
       -v ${EXP_DIR}/logs:/root/dev/logs \
       autoscaling
@@ -134,11 +145,17 @@ upload_logs() {
   gsutil cp -r ${EXP_DIR}/logs "${GCS_LOG_PATH}/${EXPERIMENT_ID}/logs"
 }
 
+cleanup() {
+  docker rm -f $(docker ps -a -q)
+  docker network rm ${NETWORK_NAME}
+  docker swarm leave -f
+}
+
 main() {
   init
   control_run_or_exit
 
-  build_docker_image
+  # build_docker_image
   setup_cluster
   run_experiment
   upload_logs
