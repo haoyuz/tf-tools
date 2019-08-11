@@ -97,7 +97,7 @@ build_docker_image() {
 execute_in_docker() {
   command=$1
   log "Executing the following command in docker"
-  log "$command"
+  log "${command}"
   docker exec -it ${CONTAINER_NAME} bash -c "${command}"
 }
 
@@ -128,7 +128,7 @@ setup_cluster() {
   log "Find the container hostnames and make them accessible from within the container"
   ${TF_DOCKER_HOME}/scripts/get_container_hostnames.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${EXP_DIR}/container_hosts
 
-  execute_in_docker "cd root/dev/tf-docker/scripts; git pull; ./enable_ssh_access.sh /root/container_hosts/hosts.txt"
+  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ./enable_ssh_access.sh /root/container_hosts/hosts.txt"
   if [[ "$IS_MASTER" == "1" ]]; then
     execute_in_docker "mpirun --allow-run-as-root --hostfile /root/container_hosts/hosts.txt -np 4 hostname"
   fi
