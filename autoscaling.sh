@@ -133,8 +133,15 @@ setup_docker_cluster() {
       -v ${EXP_DIR}/logs:/root/dev/logs \
       autoscaling
 
-  log "Find the container hostnames and make them accessible from within the container"
-  ${TF_DOCKER_HOME}/scripts/get_container_hostnames.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${EXP_DIR}/container_hosts
+  cluster_size=$(wc -l < ${EXP_DIR}/${HOSTS_FILE_NAME})
+  until [[ "$(wc -l < ${EXP_DIR}/container_hosts/hosts.txt)" == "${cluster_size}" ]]; do
+    log "Find the container hostnames and make them accessible from within the container"
+    ${TF_DOCKER_HOME}/scripts/get_container_hostnames.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${EXP_DIR}/container_hosts
+
+    container_cluster_size=$(wc -l < ${EXP_DIR}/container_hosts/hosts.txt)
+    log "Container cluster size is ${container_cluster_size}, expecting ${cluster_size}"
+    sleep 5
+  done
 
   execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ./enable_ssh_access.sh /root/container_hosts/hosts.txt"
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
