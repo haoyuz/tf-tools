@@ -91,7 +91,7 @@ init() {
 build_docker_image() {
   cd ${EXP_DIR}
   log "Building docker image..."
-  docker build -t autoscaling:latest -f src/autoscaling/Dockerfile .
+  docker build -t autoscaling:latest -f ${TF_DOCKER_HOME}/Dockerfile .
 }
 
 execute_in_docker() {
