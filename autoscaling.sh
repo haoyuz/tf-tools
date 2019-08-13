@@ -112,7 +112,7 @@ setup_vm_cluster() {
   ${TF_DOCKER_HOME}/scripts/enable_ssh_access.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
 }
 
-setup_cluster() {
+setup_docker_cluster() {
   log "Clean up running docker instances"
   cleanup
 
