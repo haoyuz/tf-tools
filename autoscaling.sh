@@ -156,7 +156,7 @@ main() {
   init
   control_run_or_exit
 
-  # build_docker_image
+  build_docker_image
   setup_cluster
   run_experiment
   upload_logs
