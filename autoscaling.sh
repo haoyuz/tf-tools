@@ -101,12 +101,20 @@ execute_in_docker() {
   docker exec -it ${CONTAINER_NAME} bash -c "${command}"
 }
 
-setup_cluster() {
-  log "Clean up running docker instances"
+cleanup() {
   docker rm -f $(docker ps -a -q)
+  docker network rm ${NETWORK_NAME}
+  docker swarm leave -f
+}
 
+setup_vm_cluster() {
   log "Setup SSH between host VMs"
   ${TF_DOCKER_HOME}/scripts/enable_ssh_access.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
+}
+
+setup_cluster() {
+  log "Clean up running docker instances"
+  cleanup
 
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     log "On master node, build an overlay network, make everyone join it"
@@ -146,18 +154,13 @@ upload_logs() {
   gsutil cp -r ${EXP_DIR}/logs "${GCS_LOG_PATH}/${EXPERIMENT_ID}/logs"
 }
 
-cleanup() {
-  docker rm -f $(docker ps -a -q)
-  docker network rm ${NETWORK_NAME}
-  docker swarm leave -f
-}
-
 main() {
   init
   control_run_or_exit
+  setup_vm_cluster
 
   build_docker_image
-  setup_cluster
+  setup_docker_cluster
   run_experiment
   upload_logs
 }
