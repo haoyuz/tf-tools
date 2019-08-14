@@ -36,6 +36,12 @@ ensure_code() {
   cd -
 }
 
+build_docker_image() {
+  cd ${EXP_DIR}
+  log "Building docker image..."
+  docker build -t autoscaling:latest -f ${TF_DOCKER_HOME}/Dockerfile .
+}
+
 set_timezone() {
   log "Setting timezone to America/Los_Angeles"
   # Requires sudo
@@ -62,6 +68,13 @@ control_run_or_exit() {
     exit 101
   fi
 
+  # When there is a "build_docker_image" file URL, rebuild docker image
+  wget "${EXP_CONTROL_URL}/build_docker_image"
+  retval=$?
+  if [[ $retval -eq 0 ]]; then
+    build_docker_image
+  fi
+
   # Assuming experiment ID is a timestamp for approximate start time
   export EXPERIMENT_ID=$(cat "${EXP_ID_FILE_NAME}")
   log "Got experiment ID ${EXPERIMENT_ID}"
@@ -86,12 +99,6 @@ init() {
 
   mkdir -p ${EXP_DIR}
   rm -rf ${EXP_DIR}/*
-}
-
-build_docker_image() {
-  cd ${EXP_DIR}
-  log "Building docker image..."
-  docker build -t autoscaling:latest -f ${TF_DOCKER_HOME}/Dockerfile .
 }
 
 execute_in_docker() {
@@ -152,7 +159,13 @@ setup_docker_cluster() {
 
 run_experiment() {
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
+    log "On master node, triggering new experiment"
     execute_in_docker "cd /root/dev/models/deploy; git pull; ./run_experiment.sh"
+  else
+    log "On worker node, waiting for experiment to finish"
+    while ssh -tt ${MASTER_HOST} "docker network ls | grep ${NETWORK_NAME}"; do
+      sleep 60
+    done
   fi
 }
 
@@ -167,8 +180,10 @@ main() {
   control_run_or_exit
   setup_vm_cluster
 
-  build_docker_image
   setup_docker_cluster
   run_experiment
   upload_logs
+  cleanup
 }
+
+main
