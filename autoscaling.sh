@@ -56,13 +56,13 @@ control_run_or_exit() {
   rm ${HOSTS_FILE_NAME}
 
   log "Getting experiment ID and hosts file from ${EXP_CONTROL_URL}"
-  wget "${EXP_CONTROL_URL}/${EXP_ID_FILE_NAME}"
+  wget --timeout=10 "${EXP_CONTROL_URL}/${EXP_ID_FILE_NAME}"
   retval=$?
   if [[ $retval -ne 0 ]]; then
     log "ERROR: Cannot get experiment ID file"
     exit 101
   fi
-  wget "${EXP_CONTROL_URL}/${HOSTS_FILE_NAME}"
+  wget --timeout=10 "${EXP_CONTROL_URL}/${HOSTS_FILE_NAME}"
   retval=$?
   if [[ $retval -ne 0 ]]; then
     log "ERROR: Cannot get hosts file"
@@ -70,7 +70,7 @@ control_run_or_exit() {
   fi
 
   # When there is a "build_docker_image" file URL, rebuild docker image
-  wget "${EXP_CONTROL_URL}/build_docker_image"
+  wget --timeout=10 "${EXP_CONTROL_URL}/build_docker_image"
   retval=$?
   if [[ $retval -eq 0 ]]; then
     build_docker_image
