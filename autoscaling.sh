@@ -1,5 +1,6 @@
 #!/bin/bash
 
+HOME="/home/haoyuzhang"
 TF_TOOLS_REPO="https://github.com/haoyuz/tf-tools.git"
 TF_TOOLS_HOME="${HOME}/tf-tools"
 TF_TOOLS_BRANCH="autoscaling"

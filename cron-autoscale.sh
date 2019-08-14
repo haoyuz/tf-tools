@@ -1,5 +1,6 @@
 #!/bin/bash
 
+HOME="/home/haoyuzhang"
 TF_TOOLS_HOME="${HOME}/tf-tools"
 HOSTNAME=$(hostname)
 GCS_LOG_PATH="gs://haoyuzhang-tf-gpu-pip/autoscaling/cron-${HOSTNAME}"
