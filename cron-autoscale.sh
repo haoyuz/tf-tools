@@ -1,7 +1,8 @@
 #!/bin/bash
 
 TF_TOOLS_HOME="${HOME}/tf-tools"
-GCS_LOG_PATH="gs://haoyuzhang-tf-gpu-pip/autoscaling/cron"
+HOSTNAME=$(hostname)
+GCS_LOG_PATH="gs://haoyuzhang-tf-gpu-pip/autoscaling/cron-${HOSTNAME}"
 
 # Checkout latest version of script
 cd ${TF_TOOLS_HOME}
