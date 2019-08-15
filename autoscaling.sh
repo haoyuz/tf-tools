@@ -29,7 +29,7 @@ ensure_code() {
   path_to_code=$1
   repo_url=$2
   branch_name=$3
-  [[ -d ${path_to_code} ]] || git clone ${code_url} ${path_to_code}
+  [[ -d ${path_to_code} ]] && git clone ${repo_url} ${path_to_code}
   cd ${path_to_code}
   git checkout .  # discard local changes (if any)
   git pull
