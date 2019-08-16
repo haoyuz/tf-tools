@@ -1,14 +1,14 @@
 #!/bin/bash
 
-HOME="/home/haoyuzhang"
+USER_HOME="/home/haoyuzhang"
 PYTHON=python3
 TF_TOOLS_REPO="https://github.com/haoyuz/tf-tools.git"
-TF_TOOLS_HOME="${HOME}/tf-tools"
+TF_TOOLS_HOME="${USER_HOME}/tf-tools"
 TF_TOOLS_BRANCH="autoscaling"
 TF_DOCKER_REPO="https://bitbucket.org/andrewor14/tf-docker"
 TF_DOCKER_BRANCH="autoscaling"
-TF_DOCKER_HOME="${HOME}/tf-docker"
-EXP_DIR="${HOME}/experiments"
+TF_DOCKER_HOME="${USER_HOME}/tf-docker"
+EXP_DIR="${USER_HOME}/experiments"
 GCS_LOG_PATH="gs://haoyuzhang-tf-gpu-pip/autoscaling"
 
 EXP_CONTROL_URL="10.0.0.101:8000/"
@@ -129,6 +129,7 @@ cleanup() {
 
 setup_vm_cluster() {
   log "Setup SSH between host VMs"
+  # .ssh should be under current $HOME, not $USER_HOME
   ${PYTHON} ${TF_DOCKER_HOME}/scripts/enable_ssh_access.py "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
 }
 
