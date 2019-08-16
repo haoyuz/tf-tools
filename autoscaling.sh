@@ -1,6 +1,7 @@
 #!/bin/bash
 
 HOME="/home/haoyuzhang"
+PYTHON=python3
 TF_TOOLS_REPO="https://github.com/haoyuz/tf-tools.git"
 TF_TOOLS_HOME="${HOME}/tf-tools"
 TF_TOOLS_BRANCH="autoscaling"
@@ -23,6 +24,18 @@ log () {
   log_message=$1
   date_time=$(date '+%Y-%m-%d %H:%M:%S')
   echo "[${date_time} autoscaling.sh] ${log_message}"
+
+  #install_xmlrpclib
+}
+
+# Required by enable_ssh_access.py
+install_xmlrpclib () {
+  wget http://effbot.org/media/downloads/xmlrpclib-1.0.1.zip
+  unzip xmlrpclib-1.0.1.zip
+  cd xmlrpclib-1.0.1
+  ${PYTHON} setup.py build
+  # Must be sudo
+  ${PYTHON} setup.py install
 }
 
 ensure_code() {
@@ -116,7 +129,7 @@ cleanup() {
 
 setup_vm_cluster() {
   log "Setup SSH between host VMs"
-  python ${TF_DOCKER_HOME}/scripts/enable_ssh_access.py "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
+  ${PYTHON} ${TF_DOCKER_HOME}/scripts/enable_ssh_access.py "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
 }
 
 setup_docker_cluster() {
@@ -151,7 +164,7 @@ setup_docker_cluster() {
     sleep 5
   done
 
-  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; python enable_ssh_access.py /root/container_hosts/hosts.txt"
+  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ${PYTHON} enable_ssh_access.py /root/container_hosts/hosts.txt"
   execute_in_docker "cd /root/dev/models; git pull"
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     execute_in_docker "mpirun --allow-run-as-root --hostfile /root/container_hosts/hosts.txt -np 4 hostname"
