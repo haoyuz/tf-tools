@@ -116,7 +116,7 @@ cleanup() {
 
 setup_vm_cluster() {
   log "Setup SSH between host VMs"
-  ${TF_DOCKER_HOME}/scripts/enable_ssh_access.sh "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
+  python ${TF_DOCKER_HOME}/scripts/enable_ssh_access.py "${EXP_DIR}/${HOSTS_FILE_NAME}" ${HOME}/.ssh
 }
 
 setup_docker_cluster() {
@@ -151,7 +151,7 @@ setup_docker_cluster() {
     sleep 5
   done
 
-  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ./enable_ssh_access.sh /root/container_hosts/hosts.txt"
+  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; python enable_ssh_access.py /root/container_hosts/hosts.txt"
   execute_in_docker "cd /root/dev/models; git pull"
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     execute_in_docker "mpirun --allow-run-as-root --hostfile /root/container_hosts/hosts.txt -np 4 hostname"
