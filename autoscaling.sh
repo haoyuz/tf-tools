@@ -165,7 +165,7 @@ setup_docker_cluster() {
     sleep 5
   done
 
-  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ${PYTHON} enable_ssh_access.py /root/container_hosts/hosts.txt"
+  execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ${PYTHON} enable_ssh_access.py /root/container_hosts/hosts.txt /root/.ssh"
   execute_in_docker "cd /root/dev/models; git pull"
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     execute_in_docker "mpirun --allow-run-as-root --hostfile /root/container_hosts/hosts.txt -np 4 hostname"
