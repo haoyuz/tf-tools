@@ -175,7 +175,7 @@ setup_docker_cluster() {
 run_experiment() {
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     log "On master node, triggering new experiment"
-    execute_in_docker "cd /root/dev/models/deploy; git pull; ./run_experiment.sh"
+    execute_in_docker "cd /root/dev/models/deploy; git pull; MIN_GPUS=8 MAX_GPUS=16 NUM_GPUS_INCREMENT=8 ./run_experiment.sh"
   else
     log "On worker node, waiting for experiment to finish"
     while ssh -tt ${MASTER_HOST} "docker network ls | grep ${NETWORK_NAME}"; do
