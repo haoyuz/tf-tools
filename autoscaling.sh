@@ -53,7 +53,7 @@ ensure_code() {
 build_docker_image() {
   cd ${EXP_DIR}
   log "Building docker image..."
-  docker build -t autoscaling:latest -f ${TF_DOCKER_HOME}/Dockerfile .
+  docker build --no-cache -t autoscaling:latest -f ${TF_DOCKER_HOME}/Dockerfile .
 }
 
 set_timezone() {
@@ -166,6 +166,7 @@ setup_docker_cluster() {
   done
 
   execute_in_docker "cd /root/dev/tf-docker/scripts; git pull; ${PYTHON} enable_ssh_access.py /root/container_hosts/hosts.txt /root/.ssh"
+  execute_in_docker "cd /root/dev/tf-docker/scripts; ./update_all.sh"
   execute_in_docker "cd /root/dev/models; git pull"
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     execute_in_docker "mpirun --allow-run-as-root --hostfile /root/container_hosts/hosts.txt -np 4 hostname"
@@ -175,7 +176,8 @@ setup_docker_cluster() {
 run_experiment() {
   if [[ "${MASTER_HOST}" == "${HOSTNAME}" ]]; then
     log "On master node, triggering new experiment"
-    execute_in_docker "cd /root/dev/models/deploy; git pull; MIN_GPUS=8 MAX_GPUS=16 NUM_GPUS_INCREMENT=8 ./run_experiment.sh"
+    execute_in_docker "cd /root/dev/models/deploy; git pull; NUM_EPOCHS=200 MIN_GPUS=4 MAX_GPUS=24 MPI_HOST_FILE= ./run_experiment.sh"
+    execute_in_docker "cd /root/dev/tf-docker/scripts; ./fetch_logs.sh /root/container_hosts/hosts.txt"
   else
     log "On worker node, waiting for experiment to finish"
     while ssh -tt ${MASTER_HOST} "docker network ls | grep ${NETWORK_NAME}"; do
