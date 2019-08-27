@@ -150,7 +150,8 @@ setup_docker_cluster() {
   log "Start containers attached to the overlay network"
   mkdir -p ${EXP_DIR}/container_hosts
   rm -rf ${EXP_DIR}/container_hosts/*
-  docker run --name "${CONTAINER_NAME}" -dit --network=${NETWORK_NAME} --runtime=nvidia \
+  docker run --name "${CONTAINER_NAME}" -dit --shm-size=1g --ulimit memlock=-1 \
+      --network=${NETWORK_NAME} --runtime=nvidia \
       -v ${EXP_DIR}/container_hosts:/root/container_hosts \
       -v ${EXP_DIR}/logs:/root/dev/logs \
       autoscaling
