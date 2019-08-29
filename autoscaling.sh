@@ -154,6 +154,7 @@ setup_docker_cluster() {
       --network=${NETWORK_NAME} --runtime=nvidia \
       -v ${EXP_DIR}/container_hosts:/root/container_hosts \
       -v ${EXP_DIR}/logs:/root/dev/logs \
+      -v /data/imagenet:/data \
       autoscaling
 
   cluster_size=$(wc -l < ${EXP_DIR}/${HOSTS_FILE_NAME})
