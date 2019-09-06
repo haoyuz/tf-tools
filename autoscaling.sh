@@ -116,6 +116,9 @@ init() {
   echo "PermitRootLogin prohibit-password" >> /etc/ssh/sshd_config
   service ssh restart
 
+  log "Mount data dist"
+  mkdir -p /data/imagenet; mount -o discard,defaults /dev/sdb /data/imagenet
+
   mkdir -p ${EXP_DIR}
   rm -rf ${EXP_DIR}/*
 }
