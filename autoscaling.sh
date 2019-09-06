@@ -111,6 +111,11 @@ init() {
   ensure_code ${TF_TOOLS_HOME} ${TF_TOOLS_REPO} ${TF_TOOLS_BRANCH}
   ensure_code ${TF_DOCKER_HOME} ${TF_DOCKER_REPO} ${TF_DOCKER_BRANCH}
 
+  log "Allow root ssh..."
+  sed -i 's/.*PermitRootLogin.*//g' /etc/ssh/sshd_config
+  echo "PermitRootLogin prohibit-password" >> /etc/ssh/sshd_config
+  service ssh restart
+
   mkdir -p ${EXP_DIR}
   rm -rf ${EXP_DIR}/*
 }
